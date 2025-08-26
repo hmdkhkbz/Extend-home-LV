@@ -1,0 +1,4 @@
+extend_home_vg: vg0
+extend_home_lv: home
+extend_home_size: "+20G"  
+extend_home_resizefs: true
