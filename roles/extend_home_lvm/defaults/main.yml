@@ -2,3 +2,8 @@ vg_name: vg0
 lv_name: home
 extend_size: "+20G"  
 resizefs: true
+mode_vg_free: true
+mode_add_pv: false
+mode_resize_pv: false
+new_pv: "/dev/sdb"
+resize_pv: "/dev/sda"
