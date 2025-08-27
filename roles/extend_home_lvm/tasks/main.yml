@@ -8,7 +8,7 @@
     vg: "{{ vg_name }}"
     lv: "{{ lv_name }}"
     size: "{{ extend_size }}"
-    resizefs: "{{ extend_home_resizefs }}"
+    resizefs: "{{ resizefs }}"
   register: lv_extend
 
 - name: Report change
