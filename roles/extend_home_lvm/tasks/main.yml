@@ -1,9 +1,39 @@
-- name: Gather LVM facts
+- name: Validate mode selection
+  ansible.builtin.assert:
+    that:
+      - (mode_vg_free | bool | int) +
+        (mode_add_pv | bool | int) +
+        (mode_resize_pv | bool | int) == 1
+    fail_msg: >
+      You must enable exactly ONE mode: 
+      mode_vg_free, mode_add_pv, or mode_resize_pv.
+    success_msg: "Mode selection valid"
+- name: Ensure VG facts are gathered
   community.general.lvg:
     vg: "{{ vg_name }}"
   register: vg_info
-
-- name: Extend {{ lv_name }} LV
+- name: Prepare for (VG free mode)
+  when: mode_vg_free | bool
+  debug:
+    msg: "Using existing free space in VG {{ vg_name }}"
+- name: Prepare for (Add PV mode)
+  when: mode_add_pv | bool
+  community.general.lvg:
+    vg: "{{ vg_name }}"
+    pvs: "{{ new_pv }}"
+    state: present
+- name: Prepare for (Resize PV mode)
+  when: mode_resize_pv | bool
+  block:
+    - name: Rescan block device to detect new size
+      ansible.builtin.command: "partprobe {{ resize_pv }}"
+      register: rescan_disk
+      changed_when: rescan_disk.rc == 0
+    - name: Inform LVM about resized PV
+      community.general.lvg:
+        vg: "{{ vg_name }}"
+        state: present
+- name: Extend LV {{ lv_name }}
   community.general.lvol:
     vg: "{{ vg_name }}"
     lv: "{{ lv_name }}"
@@ -11,7 +41,7 @@
     resizefs: "{{ resizefs }}"
   register: lv_extend
 
-- name: Report change
+- name: Report LV extension
   ansible.builtin.debug:
     msg: "Extended LV {{ lv_name }} in VG {{ vg_name }} to {{ extend_size }}"
   when: lv_extend is changed
