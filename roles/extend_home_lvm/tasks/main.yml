@@ -5,13 +5,20 @@
         (mode_add_pv | bool | int) +
         (mode_resize_pv | bool | int) == 1
     fail_msg: >
-      You must enable exactly ONE mode: 
+      You must enable exactly ONE mode:
       mode_vg_free, mode_add_pv, or mode_resize_pv.
     success_msg: "Mode selection valid"
 - name: Ensure VG facts are gathered
   community.general.lvg:
     vg: "{{ vg_name }}"
   register: vg_info
+- name: Get existing PVs in VG
+  command: vgs --noheadings -o pv_name {{ vg_name }}
+  register: vg_pvs
+  changed_when: false
+- name: Build PV list with new PV
+  set_fact:
+    pv_list: "{{ (vg_pvs.stdout_lines | map('trim') | list) + [new_pv] }}"
 - name: Prepare for (VG free mode)
   when: mode_vg_free | bool
   debug:
@@ -20,7 +27,7 @@
   when: mode_add_pv | bool
   community.general.lvg:
     vg: "{{ vg_name }}"
-    pvs: "{{ new_pv }}"
+    pvs: "{{ pv_list }}"
     state: present
 - name: Prepare for (Resize PV mode)
   when: mode_resize_pv | bool
@@ -40,7 +47,6 @@
     size: "{{ extend_size }}"
     resizefs: "{{ resizefs }}"
   register: lv_extend
-
 - name: Report LV extension
   ansible.builtin.debug:
     msg: "Extended LV {{ lv_name }} in VG {{ vg_name }} to {{ extend_size }}"
