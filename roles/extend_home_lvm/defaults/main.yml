@@ -1,4 +1,4 @@
 vg_name: vg0
 lv_name: home
 extend_size: "+20G"  
-extend_home_resizefs: true
+resizefs: true
