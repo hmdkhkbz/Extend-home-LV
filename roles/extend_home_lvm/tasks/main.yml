@@ -3,15 +3,15 @@
     vg: "{{ vg_name }}"
   register: vg_info
 
-- name: Extend {{ extend_home_lv }} LV
+- name: Extend {{ lv_name }} LV
   community.general.lvol:
     vg: "{{ vg_name }}"
     lv: "{{ lv_name }}"
-    size: "{{ extend_home_size }}"
+    size: "{{ extend_size }}"
     resizefs: "{{ extend_home_resizefs }}"
   register: lv_extend
 
 - name: Report change
   ansible.builtin.debug:
-    msg: "Extended LV {{ lv_name }} in VG {{ vg_name }} to {{ extend_home_size }}"
+    msg: "Extended LV {{ lv_name }} in VG {{ vg_name }} to {{ extend_size }}"
   when: lv_extend is changed
